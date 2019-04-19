@@ -89,7 +89,7 @@ def make_transactions_generator(data_arr,t_type,filters=None):
 #print('Amm:',mypp.ammount)
 #print('Cat:',mypp.category)
 
-dedef get_daily_spending(body):  
+def get_daily_spending(body):  
     gen_pending_transactions_objects = None
     gen_posted_transations_objects = None
     pending_trans_objects = []

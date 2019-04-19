@@ -89,33 +89,44 @@ def make_transactions_generator(data_arr,t_type,filters=None):
 #print('Amm:',mypp.ammount)
 #print('Cat:',mypp.category)
 
-def get_daily_spending(body):
-    transactions_data = split_transaction_types_from_data(body)
-
-    pending_transactions_arr = split_transaction_data(transactions_data[0])
-    posted_transations_arr = split_transaction_data(transactions_data[1])
-
-    gen_pending_transactions_objects = make_transactions_generator(pending_transactions_arr,'Pending')
-    gen_posted_transations_objects   = make_transactions_generator(posted_transations_arr,'Posted')
-
-    current_pen = next(gen_pending_transactions_objects)
-    current_post = next(gen_posted_transations_objects)
-
-
+dedef get_daily_spending(body):  
+    gen_pending_transactions_objects = None
+    gen_posted_transations_objects = None
     pending_trans_objects = []
     posted_trans_objects =  []
+    today = []
+    point_of_sales = []
+    transactions_data = split_transaction_types_from_data(body)
 
-    while current_pen:
-        pending_trans_objects.append(current_pen)
-        current_pen = next(gen_pending_transactions_objects)
+    dateNow = datetime.datetime.now().strftime("%b %d %Y")
     
-    while current_post:
-        posted_trans_objects.append(current_post)
+    if len(transactions_data) > 1:
+        pending_transactions_arr = split_transaction_data(transactions_data[0])
+        posted_transations_arr = split_transaction_data(transactions_data[1])
+        gen_pending_transactions_objects = make_transactions_generator(pending_transactions_arr,'Pending')
+        gen_posted_transations_objects   = make_transactions_generator(posted_transations_arr,'Posted')
+        current_pen = next(gen_pending_transactions_objects)
+        current_post = next(gen_posted_transations_objects)        
+        while current_pen:
+            pending_trans_objects.append(current_pen)
+            current_pen = next(gen_pending_transactions_objects)
+        while current_post:
+            posted_trans_objects.append(current_post)
+            current_post = next(gen_posted_transations_objects)
+        todays = list(filter(lambda x : x.date == dateNow ,posted_trans_objects))
+        todays.extend(list(filter(lambda x : x.date == dateNow,pending_trans_objects)))      
+    elif len(transactions_data) == 1 :
+        posted_transations_arr = split_transaction_data(transactions_data[0])
+        gen_posted_transations_objects   = make_transactions_generator(posted_transations_arr,'Posted')
         current_post = next(gen_posted_transations_objects)
-
-    todays = list(filter(lambda x : x.date == 'April 19, 2019',posted_trans_objects))
-    todays.extend(list(filter(lambda x : x.date == 'April 19, 2019',pending_trans_objects)))
-    print(len(todays))
+        posted_trans_objects =  []
+        while current_post:
+            posted_trans_objects.append(current_post)
+            current_post = next(gen_posted_transations_objects)         
+        todays = list(filter(lambda x : x.date == dateNow ,posted_trans_objects))
+    point_of_sales = list(filter(lambda x : 'Point Of Sale Withdrawal' in x.description ,todays))
+    print("Today we have spent: $",str(sum(map(lambda s: float(s.debited[2:]),point_of_sales))))
+    print(len(point_of_sales))
 #run            
 navigate_to_bank()
 time.sleep(2)
